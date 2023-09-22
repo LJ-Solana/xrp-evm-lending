@@ -5,37 +5,113 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  background: #121212; 
+  color: white; 
 }
 
-.title a {
-  color: #0070f3;
+.positionTable {
+  border-collapse: collapse;
+  margin-top: 10px;
+  border-radius: 8px;
+  width: 100vh; /* Set the width to 100vh (viewport height) */
+  text-align: right;
+  border: 1px solid #ddd; /* Set a default border color */
+}
+
+.positionTable th,
+.positionTable td {
+  border: 1px solid #ddd; /* Set the border color for table cells */
+  border-color: #f0f0f0; /* Change the border color */
+  padding: 8px;
+}
+
+.positionTable th {
+  background-color: #121212;
+  color: white; 
+}
+
+.xrpprice {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center; 
+}
+
+.warning {
+  color: #ff0000;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: left; 
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-weight: bold;
+}
+.warning p {
+  text-align: left; 
+}
+
+.walletconnect {
+  position: absolute;
+  top: 5px;
+  right: 10px; 
+  padding: 5px;
+  border-radius: 5px;
+  color: white;
+}
+
+.white-outline-input {
+  border: 1px solid #fff; 
+  background-color: transparent; 
+  color: #fff; 
+  padding: 5px;
+  border-radius: 4px; 
+}
+
+.title {
+  margin: 0;
+  padding: 10px; 
+  font-size: 2rem; 
+  font-weight: bold; 
+  color: #0070f3; 
   text-decoration: none;
+  display: inline-block; 
+  text-decoration: none;
+  align-content: top;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  margin: 10px; 
 }
 
-.title a:hover,
-.title a:focus,
-.title a:active {
-  text-decoration: underline;
+.button {
+  background-color: #007bff; 
+  color: #fff; 
+  border: none; 
+  padding: 10px 20px; 
+  cursor: pointer; 
+  border-radius: 4px; 
+  transition: background-color 0.3s ease; 
 }
 
-.title {
-  margin: 0 0 1rem;
-  line-height: 1.15;
-  font-size: 3.6rem;
-}
-
-.title {
-  text-align: center;
-}
-
-.title,
-.description {
-  text-align: center;
+.button:hover {
+  background-color: #0056b3;
 }
 
 .description {
   line-height: 1.5;
   font-size: 1.5rem;
+}
+
+.greenText {
+  color: green;
+}
+
+.whiteText {
+  color: white;
+}
+
+.redText {
+  color: red;
 }
 
 .grid {
@@ -46,6 +122,43 @@
 
   max-width: 800px;
   margin-top: 3rem;
+}
+
+.positionCards {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+/* Add this to your CSS */
+.toggleContainer {
+  display: flex;
+  margin: 10px 0;
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  overflow: hidden;
+  width: max-content;
+}
+
+.toggleButton {
+  flex: 1;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  background-color: transparent;
+  font-weight: bold;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.toggleButton:hover {
+  background-color: #ddd;
+}
+
+.active {
+  background-color: #0070f3;
+  color: white;
 }
 
 .card {
