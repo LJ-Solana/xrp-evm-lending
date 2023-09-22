@@ -1,9 +1,11 @@
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import Web3 from 'web3';
-import { ethers } from 'ethers';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import evmLendingContractABI from './lendingABI';
+import { InformationCircleIcon } from '@heroicons/react/24/solid'
+
 
 export default function Home() {
   const [isMetaMaskConnected, setIsMetaMaskConnected] = useState(false);
@@ -17,6 +19,7 @@ export default function Home() {
   const [xrpPrice, setXrpPrice] = useState(null);
   const [ethPrice, setEthPrice] = useState(null);
   const [daiPrice, setDaiPrice] = useState(null);
+  const [inputValue, setInputValue] = useState(""); 
 
   const openLendModal = () => {
     setShowLendModal(true);
@@ -139,32 +142,89 @@ export default function Home() {
   
     fetchPrices();
   }, []);
-  
 
+  const handleLend = async () => {
+    const xrplEvmRpcUrl = 'https://rpc-evm-sidechain.xrpl.org';
+  
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const web3 = new Web3(xrplEvmRpcUrl);
+        const contractAddress = '0xcD13E405D1D909B0ceb7c6429EB07cD6eAB2dfC7';
+        const contractAbi = evmLendingContractABI;
+        const  xrpToEthExchangeRate = "1000";
+        const contract = new web3.eth.Contract(contractAbi, contractAddress);
+        const xrpLoanValue = parseFloat(inputValue);
+        const ethLoanValue = xrpLoanValue * xrpToEthExchangeRate;
+        const transactionData = contract.methods.lendTokens(web3.utils.toWei(ethLoanValue.toString(), 'ether')).encodeABI();
+        const accounts = await web3.eth.getAccounts();
+        const senderAddress = accounts[0];
+        const gasPrice = 1000000;
+        const gas = await contract.methods.lendTokens(web3.utils.toWei(ethLoanValue.toString(), 'ether')).estimateGas({ from: senderAddress });
+  
+        const transaction = {
+          from: senderAddress,
+          to: contractAddress,
+          gas,
+          gasPrice,
+          data: transactionData,
+        };
+  
+        const result = await web3.eth.sendTransaction(transaction);
+        console.log('Transaction result:', result);
+  
+      } catch (error) {
+        console.error('Error lending tokens:', error);
+      }
+    } else {
+      console.error('MetaMask not detected. Please install MetaMask or use a compatible Ethereum browser.');
+    }
+  };  
+
+  async function connectMetaMask() {
+    try {
+      if (window.ethereum) {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
+        const web3 = new Web3(window.ethereum);
+
+        const accounts = await web3.eth.getAccounts();
+        const userAddress = accounts[0];
+
+        const networkId = await web3.eth.net.getId();
+        const networkName = networkId === '1' ? 'Mainnet' : 'Rinkeby';
+
+        console.log(`Connected to ${networkName} with address: ${userAddress}`);
+      } else {
+        console.error('MetaMask not found. Please install MetaMask extension.');
+      }
+    } catch (error) {
+      console.error('Error connecting to MetaMask:', error);
+    }
+  }
+    
   return (
     <div className={styles.container}>
+
       <Head>
-        <title>XRPLend</title>
+        <title>XRPLend | EVM Sidechain Lending</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main style={{ marginTop: '20px' }}>
-        <h1 className={styles.title}>
-          XRPLend <span className={styles.whiteText}>EVM</span>
-        </h1>
-        <p className={styles.walletconnect}>
-          {isMetaMaskConnected && (
-            <div className={styles.walletInfo}>
-              <p>MetaMask Connected</p>
-              <p>
-                Wallet Address: {userAddress && userAddress.length > 10 ? (
-                  userAddress.substring(0, 4) + '...' + userAddress.slice(-4)
-                ) : userAddress}
-              </p>
-              <p>Balance: {balance ? parseFloat(balance).toFixed(2) : 'Loading'} XRP</p>
-            </div>
-          )}
-        </p>
+      <main style={{ width: '90%' }}>
+
+        <div className={styles.header}>
+          <img src="/xrpl_logo.svg" alt="XRPL Logo" className={styles.logo} />
+          {showLendTable ? (
+          <h1 className={styles.titleGreen}>
+            Lend <span className={styles.whiteText}>EVM</span>
+          </h1>
+          ) : (
+          <h1 className={styles.titleRed}>
+            Borrow <span className={styles.whiteText}>EVM</span>
+          </h1>
+              )}
+        </div>
 
         <div className={styles.toggleContainer}>
           <button
@@ -181,11 +241,26 @@ export default function Home() {
           </button>
         </div>
 
+        <button
+          className={styles.walletConnect}
+          onClick={connectMetaMask} 
+          disabled={isMetaMaskConnected}
+        >
+          {isMetaMaskConnected ? 'Connected' : 'Connect MetaMask'}
+        </button>
+
+        <div className={styles.accountInfo}>
+          <h2 className={styles.positionsTitle}>Your Account: </h2>
+            <p>
+             {userAddress && userAddress.length > 10 ? (
+                userAddress.substring(0, 4) + '...' + userAddress.slice(-4)
+              ) : userAddress}
+            </p>
+        </div>
+
+
         {showLendTable ? (
         <div>
-          <h2 className={styles.positionsTitle}>Your Positions</h2>
-
-          {/* Position Cards */}
           <div className={styles.positionCards}>
             <div className={styles.card}>
               <p>Asset: XRP</p>
@@ -209,67 +284,80 @@ export default function Home() {
             </div>
           </div>
           
-          <h2 className={styles.positionsTitle}>Lending Options</h2>
+          <h2 className={styles.positionsTitle}>Global Pool</h2>
           <table className={styles.positionTable}>
-            <thead>
-              <tr>
-                <th>Asset</th>
-                <th>Price</th> 
-                <th>Deposits</th>
-                <th><span onClick={setShowAPYModal}>ℹ️ </span> APY</th>
-                <th>Wallet Amt.</th> 
-                <th>Amount to Lend</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>XRP</td>
-                <td>${parseFloat(xrpPrice).toFixed(2)}</td> 
-                <td>1000</td>
-                <td className={styles.greenText}>5%</td>
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} XRP</td>
-                <td>
-                  <input type="number" />
-                </td>
-                <td>
-                  <button className={styles.button} onClick={openLendModal}>Lend</button>
-                </td>
-              </tr>
-              <tr>
-                <td>ETH</td>
-                <td>${parseFloat(ethPrice).toFixed(2)}</td> 
-                <td>500</td>
-                <td className={styles.greenText}>2%</td>
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} XRP</td>
-                <td>
-                  <input type="number" />
-                </td>
-                <td>
-                  <button className={styles.button} onClick={openBorrowModal}>Lend</button>
-                </td>
-              </tr>
-              <tr>
-                <td>DAI</td>
-                <td>${parseFloat(daiPrice).toFixed(2)}</td> 
-                <td>500</td>
-                <td className={styles.greenText}>3%</td>
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} XRP</td>
-                <td>
-                  <input type="number" />
-                </td>
-                <td>
-                  <button className={styles.button} onClick={openBorrowModal}>Lend</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th><InformationCircleIcon height={'20px'} title="APY Info"/>Price</th>
+              <th><InformationCircleIcon height={'20px'} />APY</th>
+              <th><InformationCircleIcon height={'20px'} />Deposits</th>
+              <th>Wallet Amt.</th>
+              <th>Amount to Supply</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <img src="/xrp-logo.png" alt="XRP Logo" className={styles.assetLogo} />
+                XRP
+              </td>
+              <td>${parseFloat(xrpPrice).toFixed(2)}</td>
+              <td className={styles.greenText}>5%</td>
+              <td>1000</td>
+              <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
+              <td>
+                <input className={styles.input} type="number" defaultValue={0} />
+              </td>
+              <td>
+                <button className={styles.button} onClick={handleLend}>
+                  Supply
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <img src="/eth-logo.png" alt="ETH Logo" className={styles.assetLogo} />
+                ETH
+              </td>
+              <td>${parseFloat(ethPrice).toFixed(2)}</td>
+              <td className={styles.greenText}>2%</td>
+              <td>500</td>
+              <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
+              <td>
+                <input className={styles.input} type="number" defaultValue={0} />
+              </td>
+              <td>
+                <button className={styles.button} onClick={openBorrowModal}>
+                  Supply
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <img src="/dai-logo.png" alt="DAI Logo" className={styles.assetLogo} />
+                DAI
+              </td>
+              <td>${parseFloat(daiPrice).toFixed(2)}</td>
+              <td className={styles.greenText}>3%</td>
+              <td>500</td>
+              <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
+              <td>
+                <input className={styles.input} type="number" defaultValue={0} />
+              </td>
+              <td>
+                <button className={styles.button} onClick={openBorrowModal}>
+                  Supply
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         </div>
       ) : (
-        // Borrow Table
+
         <div>
-          <h2 className={styles.positionsTitle}>Your Positions</h2>
-        
           <div className={styles.positionCards}>
             <div className={styles.card}>
               <p>Asset: XRP</p>
@@ -293,14 +381,14 @@ export default function Home() {
             </div>
           </div>
 
-          <h2 className={styles.positionsTitle}>Borrowing Options</h2>
+          <h2 className={styles.positionsTitle}>Global Pool</h2>
           <table className={styles.positionTable}>
             <thead>
               <tr>
                 <th>Asset</th>
-                <th>Price</th> 
-                <th>Available</th>
-                <th> <span onClick={setShowAPRModal}>ℹ️</span> APR</th>
+                <th><InformationCircleIcon height={'20px'} title="APY Info"/>Price</th> 
+                <th><InformationCircleIcon height={'20px'} title="APY Info"/>APR</th>
+                <th><InformationCircleIcon height={'20px'} title="APY Info"/>Available</th>
                 <th>Wallet Amt.</th> 
                 <th>Amount to Borrow</th>
                 <th>Action</th>
@@ -310,11 +398,11 @@ export default function Home() {
               <tr>
                 <td>ETH</td>
                 <td>${parseFloat(ethPrice).toFixed(2)}</td> 
-                <td>500</td>
                 <td className={styles.redText}>6%</td>
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} XRP</td>
+                <td>500</td>
+                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
                 <td>
-                  <input type="number" className={styles.whiteOutlineInput} />
+                  <input className={styles.input}  type="number" defaultValue={0} />
                 </td>
                 <td>
                   <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
@@ -322,12 +410,12 @@ export default function Home() {
               </tr>
               <tr>
                 <td>DAI</td>
-                <td>${parseFloat(daiPrice).toFixed(2)}</td> {/* Display DAI price */}
-                <td>500</td>
+                <td>${parseFloat(daiPrice).toFixed(2)}</td> 
                 <td className={styles.redText}>6%</td>
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} XRP</td>
+                <td>500</td>
+                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
                 <td>
-                  <input type="number" className={styles.whiteOutlineInput} />
+                  <input className={styles.input} type="number" defaultValue={0} />
                 </td>
                 <td>
                   <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
@@ -335,12 +423,12 @@ export default function Home() {
               </tr>
               <tr>
                 <td>XRP</td>
-                <td>${parseFloat(xrpPrice).toFixed(2)}</td> {/* Display XRP price */}
-                <td>500</td>
+                <td>${parseFloat(xrpPrice).toFixed(2)}</td> 
                 <td className={styles.redText}>6%</td>
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} XRP</td>
+                <td>500</td>
+                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
                 <td>
-                  <input type="number" /> {/* Input field */}
+                  <input className={styles.input}  type="number"  defaultValue={0} /> 
                 </td>
                 <td>
                   <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
@@ -353,14 +441,14 @@ export default function Home() {
 
       </main>
 
-      <footer>
+      <footer className={styles.footer}>
         <div className={styles.warning}>
           <p>This Lending dApp is not designed for a production environment.</p>
         </div>
         <div className={styles.xrpprice}>
           {xrpPrice !== null ? (
             <>
-              <img src="/xrp-logo.png" alt="XRP Logo" style={{ width: '30px', height: '30px', marginRight: '10px' }} />  
+              <img src="/xrp-logo.png" alt="XRP Logo" style={{ width: '30px', height: '30px', marginRight: '5px' }} />  
               <p>XRP Price: ${parseFloat(xrpPrice).toFixed(2)}</p>
             </>
           ) : (
@@ -368,7 +456,6 @@ export default function Home() {
           )}
         </div>
       </footer>
-
 
        {/* Lend Modal */}
        {showLendModal && (
@@ -381,122 +468,36 @@ export default function Home() {
         </div>
       )}
 
-      {/* Borrow Modal */}
       {showBorrowModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={closeBorrowModal}>&times;</span>
+        <div className={styles.modals}>
+          <div className={styles.modalContent}>
+            <span className={styles.close} onClick={closeBorrowModal}>&times;</span>
             <h2>Borrow Tokens</h2>
             <button>Borrow</button> 
           </div>
         </div>
       )}
 
-      {/* APY Modal */}
       {showAPYModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={closeAPYModal}>&times;</span>
+        <div className={styles.modals}>
+          <div className={styles.modalContent}>
+            <span className={styles.close} onClick={closeAPYModal}>&times;</span>
             <h2>What is APY?</h2>
-            <p>What you'll earn on deposits over a year. This includes compounding.</p>
+            <p className={styles.centerText}>What you'll earn on deposits over a year. This includes compounding.</p>
           </div>
         </div>
       )}
 
-         {/* APR Modal */}
-         {showAPRModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={closeAPRModal}>&times;</span>
+      {showAPRModal && (
+        <div className={styles.modals}>
+          <div className={styles.modalContent}>
+            <span className={styles.close} onClick={closeAPRModal}>&times;</span>
             <h2>What is APR?</h2>
-            <p style={{textAlign: 'center'}}>What you'll pay for your borrows, or the price of a loan. This does not include compounding.</p>
+            <p className={styles.centerText}>What you'll pay for your borrows, or the price of a loan. This does not include compounding.</p>
           </div>
         </div>
       )}
 
-      <style jsx>{`
-        .modal {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: fixed;
-          z-index: 1;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.7);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-content {
-          background-color: #121212;
-          padding: 20px;
-          border-radius: 10px;
-          width: 40%;
-          height: 40%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          position: relative;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .close {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          font-size: 24px;
-          color: white;
-          cursor: pointer;
-        }
-
-        .close:hover {
-          color: #0070f3; /* Change the close icon color on hover */
-        }
-
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-        footer {
-          width: 100%;
-          height: 50px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: end;
-        }
-        footer img {
-          margin-left: 0.5rem;
-        }
-        footer a {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-decoration: none;
-          color: inherit;
-        }
-        code {
-          background: #121212;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family:
-            Menlo,
-            Monaco,
-            Lucida Console,
-            Liberation Mono,
-            DejaVu Sans Mono,
-            Bitstream Vera Sans Mono,
-            Courier New,
-            monospace;
-        }
-      `}</style>
 
       <style jsx global>{`
         html,

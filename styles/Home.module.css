@@ -1,5 +1,8 @@
+/* styles.css or Home.module.css */
+
 .container {
   min-height: 100vh;
+  min-width: 100vh;
   padding: 0 0.5rem;
   display: flex;
   flex-direction: column;
@@ -13,15 +16,17 @@
   border-collapse: collapse;
   margin-top: 10px;
   border-radius: 8px;
-  width: 100vh; /* Set the width to 100vh (viewport height) */
+  width: 100%; 
+  min-width: 100vh; 
   text-align: right;
-  border: 1px solid #ddd; /* Set a default border color */
+  border: 1px solid #ddd; 
+  margin-bottom: 15%;
 }
 
 .positionTable th,
 .positionTable td {
-  border: 1px solid #ddd; /* Set the border color for table cells */
-  border-color: #f0f0f0; /* Change the border color */
+  border: 1px solid #ddd; 
+  border-color: #f0f0f0; 
   padding: 8px;
 }
 
@@ -30,27 +35,98 @@
   color: white; 
 }
 
+.footer {
+  width: 100%;
+  max-height: 25px; 
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  justify-content: space-between;
+}
+
 .xrpprice {
   display: flex;
-  justify-content: flex-end;
-  align-items: center; 
+  align-items: center;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin: 10px; 
+  color: white;
 }
 
 .warning {
-  color: #ff0000;
-  padding: 10px;
+  color: #333;
+  padding: 5px;
   border-radius: 5px;
-  text-align: left; 
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  position: absolute;
+  left: 0;
+  bottom: 0;
   font-weight: bold;
 }
 .warning p {
-  text-align: left; 
+  text-align: left;
+  padding: 10px; 
 }
 
-.walletconnect {
+.code {
+  background: #121212;
+  border-radius: 5px;
+  padding: 0.75rem;
+  font-size: 1.1rem;
+  font-family:
+    Menlo,
+    Monaco,
+    Lucida Console,
+    Liberation Mono,
+    DejaVu Sans Mono,
+    Bitstream Vera Sans Mono,
+    Courier New,
+    monospace;
+}
+
+.modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content {
+  background-color: #121212;
+  padding: 20px;
+  border-radius: 10px;
+  width: 40%;
+  height: 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #0070f3; 
+}
+
+.walletConnect {
   position: absolute;
   top: 5px;
   right: 10px; 
@@ -59,28 +135,130 @@
   color: white;
 }
 
-.white-outline-input {
-  border: 1px solid #fff; 
-  background-color: transparent; 
-  color: #fff; 
-  padding: 5px;
-  border-radius: 4px; 
+.assetLogo {
+  height: 20px;
+  width: 20px;
+  align-items: center; 
+  margin-right: 5px; 
 }
 
-.title {
-  margin: 0;
-  padding: 10px; 
-  font-size: 2rem; 
+.accountInfo {
+  display: flex;
+  align-items: flex-end;
+}
+
+.accountInfo h2 {
+  margin: 0; 
+  font-size: 24px; 
   font-weight: bold; 
-  color: #0070f3; 
-  text-decoration: none;
-  display: inline-block; 
-  text-decoration: none;
-  align-content: top;
+  color: white;
+  margin-right: 10px; 
+  line-height: 24px;
+}
+
+.accountInfo p {
+  margin: 0;
+  font-size: 16px;
+  color: #777; 
+  line-height: 24px;
+}
+
+
+.walletConnect {
+  padding: 10px 20px; 
+  background-color: #0070f3; 
+  color: white; 
+  border: none; 
+  cursor: pointer; 
+  margin-top: 10px;
+}
+
+.walletConnect:hover {
+  background-color: #0056b3; 
+}
+
+
+.modals {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  border-radius: 20px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); 
+  z-index: 1000; 
+}
+
+.modalContent {
+  background-color: #121212;
+  border-radius: 20px;
+  padding: 25px;
+  width: 40%;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.inputContainer {
+  display: flex;
+}
+
+.input {
+  background-color: transparent;
+  color: #fff;
+  padding: 5px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.maxLabel {
+  margin-left: 5px; 
+  color: #fff;
+}
+
+
+.header {
+  display: flex;
+  align-items: center; 
   position: absolute;
   top: 10px;
   left: 10px;
-  margin: 10px; 
+}
+
+.logo {
+  width: auto; 
+  height: auto; 
+  margin-right: 10px; 
+}
+
+.titleGreen {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+  color: green;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.titleRed {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+  color: red;
+  text-decoration: none;
+  display: inline-block;
+}
+
+
+.whiteText {
+  color: white;
 }
 
 .button {
@@ -121,7 +299,7 @@
   justify-content: center;
   flex-wrap: wrap;
 
-  max-width: 800px;
+  max-width: 100%;
   margin-top: 3rem;
 }
 
@@ -131,14 +309,19 @@
   justify-content: space-between;
 }
 
-/* Add this to your CSS */
 .toggleContainer {
   display: flex;
-  margin: 10px 0;
+  margin: 0 auto;
+  top: 10px;
+  justify-content: center;
+  text-align: center;
   background-color: #f0f0f0;
   border-radius: 20px;
   overflow: hidden;
   width: max-content;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .toggleButton {
