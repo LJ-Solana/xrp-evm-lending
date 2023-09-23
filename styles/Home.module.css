@@ -20,7 +20,7 @@
   min-width: 100vh; 
   text-align: right;
   border: 1px solid #ddd; 
-  margin-bottom: 15%;
+  margin-bottom: 5%;
 }
 
 .positionTable th,
@@ -37,8 +37,7 @@
 
 .footer {
   width: 100%;
-  max-height: 25px; 
-  border-top: 1px solid #eaeaea;
+  max-height: 50px; 
   display: flex;
   justify-content: space-between;
 }
@@ -196,6 +195,8 @@
   background-color: #121212;
   border-radius: 20px;
   padding: 25px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   width: 40%;
   position: relative;
 }
@@ -256,7 +257,6 @@
   display: inline-block;
 }
 
-
 .whiteText {
   color: white;
 }
@@ -298,7 +298,6 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-
   max-width: 100%;
   margin-top: 3rem;
 }
@@ -307,6 +306,7 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  margin-bottom: 5px;
 }
 
 .toggleContainer {
@@ -345,10 +345,26 @@
   color: white;
 }
 
+.cardGlobal {
+  margin: 1rem;
+  flex-basis: 45%;
+  padding-left: 1.5rem;
+  text-align: left;
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid #eaeaea;
+  border-radius: 10px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
 .card {
   margin: 1rem;
   flex-basis: 45%;
-  padding: 1.5rem;
+  padding-left: 1.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   text-align: left;
   color: inherit;
   text-decoration: none;
@@ -380,6 +396,39 @@
 .logo {
   height: 1em;
 }
+
+/* Add this CSS to your stylesheet */
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+/* Tooltip text */
+.tooltipText {
+  visibility: hidden;
+  width: 200px;
+  background-color: #f0f0f0;
+  color: #333;
+  text-align: left;
+  border-radius: 4px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  top: 30px; /* Adjust the distance from the icon */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* Show the tooltip text when hovering over the icon */
+.tooltip:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+
 
 @media (max-width: 600px) {
   .grid {
