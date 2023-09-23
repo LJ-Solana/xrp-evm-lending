@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { InformationCircleIcon } from '@heroicons/react/24/solid'
 import XRPLendingBorrowingContractABI from './XRPLending_BorrowingABI';
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Home() {
 const [isMetaMaskConnected, setIsMetaMaskConnected] = useState(false);
@@ -23,7 +24,7 @@ const [ethPrice, setEthPrice] = useState(null);
 const [daiPrice, setDaiPrice] = useState(null);
 const [inputValue, setInputValue] = useState(""); 
 
-// Add new Token Support (Auth Only)
+// Add Token Support (Auth Only)
 const [tokenAddress, setTokenAddress] = useState(''); 
 const [LTV, setLTV] = useState(0); 
 const [stableRate, setStableRate] = useState(0); 
@@ -33,15 +34,9 @@ const [tokenName, setTokenName] = useState('');
 const [lendAmount, setLendAmount] = useState(0);
 const [web3Instance, setWeb3Instance] = useState(null);
 const [XRPLendingContract,  setXRPLendingContract] = useState(null);
-const [availableAmount, setAvailableAmount] = useState(0);
 
-// const XRPLendAddress = '0x4445c5D07ad4DBfa4491Fd7A6f3F8F3A56a935ed';
+// Borrowing
 const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
-
-
-// Available Borrowing
-
-
 
   const openLendModal = () => {
     setShowLendModal(true);
@@ -112,6 +107,33 @@ const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
       console.error('Error connecting to MetaMask:', error);
     }
   }
+
+  useEffect(() => {
+    async function initWeb3() {
+      if (window.ethereum) {
+        const web3Instance = new Web3(window.ethereum);
+        const contractAddress = '0xeF6C360086DB37ED5476761E2BBEAf474Caada69';
+        const XRPLendingContract = new web3Instance.eth.Contract(
+          XRPLendingBorrowingContractABI,
+          contractAddress
+        );
+        setWeb3Instance(web3Instance);
+        setXRPLendingContract(XRPLendingContract);
+        console.log('Contract instance:', XRPLendingContract);
+  
+        // Move the contract instance creation here
+        const contractInstance = new web3Instance.eth.Contract(
+          XRPLendingBorrowingContractABI,
+          contractAddress
+        );
+        // Now, you can use contractInstance in the rest of your component
+        // ...
+      } else {
+        console.error('No Ethereum provider detected');
+      }
+    }
+    initWeb3();
+  }, []);
   
   useEffect(() => {
     async function fetchPrices() {
@@ -140,31 +162,11 @@ const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
     fetchPrices();
   }, []);
 
-  useEffect(() => {
-    async function initWeb3() {
-      if (window.ethereum) {
-        const web3Instance = new Web3(window.ethereum);
-        const contractAddress = '0xeF6C360086DB37ED5476761E2BBEAf474Caada69';
-        const XRPLendingContract = new web3Instance.eth.Contract(
-          XRPLendingBorrowingContractABI,
-          contractAddress
-        );
-        setWeb3Instance(web3Instance);
-        setXRPLendingContract(XRPLendingContract);
-        console.log('Contract instance:', XRPLendingContract);
-      } else {
-        console.error('No Ethereum provider detected');
-      }
-    }
-    initWeb3();
-  }, []);
-
   const addSupportedToken = async () => {
     try {
       if (web3Instance && XRPLendingContract) {
         const accounts = await web3Instance.eth.requestAccounts();
         const userAddress = accounts[0];
-
         await XRPLendingContract.methods
           .addSupportedToken(tokenAddress, LTV, stableRate, tokenName)
           .send({ from: userAddress });
@@ -190,6 +192,8 @@ const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
       try {
         console.log('Before sending transaction');
         const amountInWei = web3Instance.utils.toWei(lendAmount.toString(), 'ether');
+        console.log('Lend Amount:', lendAmount);
+        console.log('Amount in Wei:', amountInWei);
   
         await XRPLendingContract.methods
           .lend(tokenAddress, amountInWei)
@@ -198,9 +202,10 @@ const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
           });
   
         console.log('Transaction sent successfully');
-        alert('Lending successful');
+        toast.success('Lending successful');
       } catch (error) {
         console.error('Error lending:', error);
+        toast.error('Lending failed');
       }
     }
   };  
@@ -209,7 +214,21 @@ const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
     const newValue = e.target.value;
     setLendAmount(newValue);
     console.log('Lend Amount:', newValue);
-  };
+  };  
+
+  async function getTokenInfo(index) {
+    try {
+      const result = await contractInstance.methods.getTokenInfo(index).call();
+      // The result will contain the information you requested
+      const { tokenAddress, LTV, stableRate, name } = result;
+      console.log('Token Info:', tokenAddress, LTV, stableRate, name);
+    } catch (error) {
+      console.error('Error fetching token info:', error);
+    }
+  }
+  // Call the function with an index (e.g., 0)
+  getTokenInfo(0);
+  
 
   useEffect(() => {
     // Read the available XRPL amount for the specific token
@@ -324,8 +343,6 @@ const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
             </p>
         </div>
 
-        {showLendTable ? (
-        <div>
           <div className={styles.positionCards}>
             <div className={styles.card}>
               <p>Asset: XRP</p>
@@ -348,218 +365,198 @@ const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
               <p className={styles.greenText}>APY: 3%</p>
             </div>
           </div>
-          
+
           <h2>Global Pool</h2>
 
-          <table className={styles.positionTable}>
-          <thead>
-            <tr>
-              <th>Asset</th>
-              <th>
-                <div className={styles.tooltip}>
-                  <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
-                  <div className={styles.tooltipText}>
-                    <p>Price</p>
-                    <p>Powered by Coingecko Public API.</p>
-                  </div>
-                </div>
-                Price
-              </th>
-              <th>
-                <div className={styles.tooltip}>
-                  <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
-                  <div className={styles.tooltipText}>
-                    <p>APY</p>
-                    <p>What you'll earn on deposits over a year.</p>
-                  </div>
-                </div>
-                APY
-              </th>
-              <th>
-                <div className={styles.tooltip}>
-                  <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
-                  <div className={styles.tooltipText}>
-                    <p>Deposits</p>
-                    <p>Total XRPLend deposits for each asset.</p>
-                  </div>
-                </div>
-                Deposits
-              </th>
-              <th>Wallet Amt.</th>
-              <th>Amount to Supply</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                XRPLend
-              </td>
-              <td>${parseFloat(xrpPrice).toFixed(2)}</td>
-              <td className={styles.greenText}>5%</td>
-              <td>1000</td>
-              <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
-              <td>
-                <input
-                  className={styles.input}
-                  type="number"
-                  value={lendAmount}
-                  onChange={handleInputChange}
-                />
-              </td>
-              <td>
-                <button className={styles.button} onClick={() => handleLend('0x4445c5D07ad4DBfa4491Fd7A6f3F8F3A56a935ed', lendAmount)}>
-                  Supply
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                USD (Bridged USD)
-              </td>
-              <td>${parseFloat(ethPrice).toFixed(2)}</td>
-              <td className={styles.greenText}>2%</td>
-              <td>500</td>
-              <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
-              <td>
-                <input className={styles.input} type="number" defaultValue={0} />
-              </td>
-              <td>
-              <button className={styles.button} onClick={() => handleLend('0xfF0d22C43C43c6d5d6D17a0109e6605AC7B26489', lendAmount)}>
-                  Supply
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                Peersyst token
-              </td>
-              <td>${parseFloat(daiPrice).toFixed(2)}</td>
-              <td className={styles.greenText}>3%</td>
-              <td>500</td>
-              <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
-              <td>
-                <input className={styles.input} type="number" defaultValue={0} />
-              </td>
-              <td>
-                <button className={styles.button} onClick={() => handleLend('0x89B4dE433558cbEeA95cD57bfCA4357A4FEA4Ace', lendAmount)}>
-                  Supply
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-      ) : (
-
-        <div>
-          <div className={styles.positionCards}>
-            <div className={styles.card}>
-              <p>Asset: XRP</p>
-              <p>Amount: 1000</p>
-              <p>USD Value: $1000</p>
-              <p className={styles.redText}>APR: 5%</p>
-            </div>
-
-            <div className={styles.card}>
-              <p>Asset: ETH</p>
-              <p>Amount: 500</p>
-              <p>USD Value: $1000</p>
-              <p className={styles.redText}>APR: 2%</p>
-            </div>
-
-            <div className={styles.card}>
-              <p>Asset: DAI</p>
-              <p>Amount: 500</p>
-              <p>USD Value: $1000</p>
-              <p className={styles.redText}>APR: 3%</p>
-            </div>
+          {showLendTable ? (
+          <div>
+            <table className={styles.positionTable}>
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>
+                    <div className={styles.tooltip}>
+                      <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
+                      <div className={styles.tooltipText}>
+                        <p>Price</p>
+                        <p>Powered by Coingecko Public API.</p>
+                      </div>
+                    </div>
+                    Price
+                  </th>
+                  <th>
+                    <div className={styles.tooltip}>
+                      <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
+                      <div className={styles.tooltipText}>
+                        <p>APY</p>
+                        <p>What you'll earn on deposits over a year.</p>
+                      </div>
+                    </div>
+                    APY
+                  </th>
+                  <th>
+                    <div className={styles.tooltip}>
+                      <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
+                      <div className={styles.tooltipText}>
+                        <p>Deposits</p>
+                        <p>Total XRPLend deposits for each asset.</p>
+                      </div>
+                    </div>
+                    Deposits
+                  </th>
+                  <th>Wallet Amt.</th>
+                  <th>Amount to Supply</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>XRPLend</td>
+                  <td>${parseFloat(xrpPrice).toFixed(2)}</td>
+                  <td className={styles.greenText}>5%</td>
+                  <td>1000</td>
+                  <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
+                  <td>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={lendAmount}
+                      onChange={handleInputChange}
+                    />
+                  </td>
+                  <td>
+                    <button
+                      className={styles.button}
+                      onClick={() => handleLend('0x4445c5D07ad4DBfa4491Fd7A6f3F8F3A56a935ed', lendAmount)}
+                    >
+                      Supply
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>USD (Bridged USD)</td>
+                  <td>${parseFloat(ethPrice).toFixed(2)}</td>
+                  <td className={styles.greenText}>2%</td>
+                  <td>500</td>
+                  <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
+                  <td>
+                    <input className={styles.input} type="number" defaultValue={0} />
+                  </td>
+                  <td>
+                    <button
+                      className={styles.button}
+                      onClick={() => handleLend('0xfF0d22C43C43c6d5d6D17a0109e6605AC7B26489', lendAmount)}
+                    >
+                      Supply
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Peersyst token</td>
+                  <td>${parseFloat(daiPrice).toFixed(2)}</td>
+                  <td className={styles.greenText}>3%</td>
+                  <td>500</td>
+                  <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
+                  <td>
+                    <input className={styles.input} type="number" defaultValue={0} />
+                  </td>
+                  <td>
+                    <button
+                      className={styles.button}
+                      onClick={() => handleLend('0x89B4dE433558cbEeA95cD57bfCA4357A4FEA4Ace', lendAmount)}
+                    >
+                      Supply
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-
-          <h2 className={styles.positionsTitle}>Global Pool</h2>
-          <table className={styles.positionTable}>
-            <thead>
-              <tr>
-                <th>Asset</th>
-                <th>
-                  <div className={styles.tooltip}>
-                    <InformationCircleIcon height={'20px'} title="APY Info" className={styles.infoIcon} />
-                    <div className={styles.tooltipText}>
-                      <p>Price</p>
-                      <p>Powered by Coingecko public API.</p>
+        ) : (
+          <div>
+            <table className={styles.positionTable}>
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>
+                    <div className={styles.tooltip}>
+                      <InformationCircleIcon height={'20px'} title="APY Info" className={styles.infoIcon} />
+                      <div className={styles.tooltipText}>
+                        <p>Price</p>
+                        <p>Powered by Coingecko public API.</p>
+                      </div>
                     </div>
-                  </div>
-                  Price
-                </th>
-                <th>
-                  <div className={styles.tooltip}>
-                    <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
-                    <div className={styles.tooltipText}>
-                      <p>APR</p>
-                      <p>What you'll pay for your borrows, or the price of a loan. This does not include compounding. </p>
+                    Price
+                  </th>
+                  <th>
+                    <div className={styles.tooltip}>
+                      <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
+                      <div className={styles.tooltipText}>
+                        <p>APR</p>
+                        <p>What you'll pay for your borrows, or the price of a loan. This does not include compounding.</p>
+                      </div>
                     </div>
-                  </div>
-                  APR
-                </th>
-                <th>
-                  <div className={styles.tooltip}>
-                    <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
-                    <div className={styles.tooltipText}>
-                      <p>Available</p>
-                      <p>The amount of tokens available to borrow for each asset. Calculated as the minimum of the asset's borrow limit and available liquidity that has not yet been borrowed.</p>
+                    APR
+                  </th>
+                  <th>
+                    <div className={styles.tooltip}>
+                      <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
+                      <div className={styles.tooltipText}>
+                        <p>Available</p>
+                        <p>The amount of tokens available to borrow for each asset. Calculated as the minimum of the asset's borrow limit and available liquidity that has not yet been borrowed.</p>
+                      </div>
                     </div>
-                  </div>
-                  Available
-                </th>
-                <th>Wallet Amt.</th> 
-                <th>Amount to Borrow</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>XRPLend</td>
-                <td>${parseFloat(xrpPrice).toFixed(2)}</td> 
-                <td className={styles.redText}>6%</td>
-                <td>{availableBorrowAmount}</td> 
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
-                <td>
-                  <input className={styles.input}  type="number"  defaultValue={0} /> 
-                </td>
-                <td>
-                  <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
-                </td>
-              </tr>
-              <tr>
-                <td>USD (Bridged USD)</td>
-                <td>${parseFloat(ethPrice).toFixed(2)}</td> 
-                <td className={styles.redText}>6%</td>
-                <td>500</td>
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
-                <td>
-                  <input className={styles.input}  type="number" defaultValue={0} />
-                </td>
-                <td>
-                  <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Peersyst token</td>
-                <td>${parseFloat(daiPrice).toFixed(2)}</td> 
-                <td className={styles.redText}>6%</td>
-                <td>500</td>
-                <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'} </td>
-                <td>
-                  <input className={styles.input} type="number" defaultValue={0} />
-                </td>
-                <td>
-                  <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+                    Available
+                  </th>
+                  <th>Wallet Amt.</th>
+                  <th>Amount to Borrow</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>XRPLend</td>
+                  <td>${parseFloat(xrpPrice).toFixed(2)}</td>
+                  <td className={styles.redText}>6%</td>
+                  <td>{availableBorrowAmount}</td>
+                  <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
+                  <td>
+                    <input className={styles.input} type="number" defaultValue={0} />
+                  </td>
+                  <td>
+                    <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>USD (Bridged USD)</td>
+                  <td>${parseFloat(ethPrice).toFixed(2)}</td>
+                  <td className={styles.redText}>6%</td>
+                  <td>500</td>
+                  <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
+                  <td>
+                    <input className={styles.input} type="number" defaultValue={0} />
+                  </td>
+                  <td>
+                    <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Peersyst token</td>
+                  <td>${parseFloat(daiPrice).toFixed(2)}</td>
+                  <td className={styles.redText}>6%</td>
+                  <td>500</td>
+                  <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
+                  <td>
+                    <input className={styles.input} type="number" defaultValue={0} />
+                  </td>
+                  <td>
+                    <button className={styles.button} onClick={openBorrowModal}>Borrow</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
 
       </main>
 
