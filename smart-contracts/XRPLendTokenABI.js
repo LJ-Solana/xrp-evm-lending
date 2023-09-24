@@ -1,14 +1,33 @@
-const XRPLendingBorrowingContractABI = [
-      {
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_larToken",
-				"type": "address"
-			}
-		],
+const TOKEN_ABI = [
+	{
+		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Approval",
+		"type": "event"
 	},
 	{
 		"anonymous": false,
@@ -30,60 +49,44 @@ const XRPLendingBorrowingContractABI = [
 		"type": "event"
 	},
 	{
+		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": true,
 				"internalType": "address",
-				"name": "tokenAddress",
+				"name": "from",
 				"type": "address"
 			},
 			{
-				"internalType": "uint256",
-				"name": "LTV",
-				"type": "uint256"
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
 			},
 			{
+				"indexed": false,
 				"internalType": "uint256",
-				"name": "stableRate",
+				"name": "value",
 				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
 			}
 		],
-		"name": "addSupportedToken",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
+		"name": "Transfer",
+		"type": "event"
 	},
 	{
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "tokenAddress",
+				"name": "owner",
 				"type": "address"
 			},
 			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "borrow",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "address",
-				"name": "",
+				"name": "spender",
 				"type": "address"
 			}
 		],
-		"name": "borrowedAmount",
+		"name": "allowance",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -98,7 +101,7 @@ const XRPLendingBorrowingContractABI = [
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "tokenAddress",
+				"name": "spender",
 				"type": "address"
 			},
 			{
@@ -107,48 +110,26 @@ const XRPLendingBorrowingContractABI = [
 				"type": "uint256"
 			}
 		],
-		"name": "depositCollateral",
-		"outputs": [],
+		"name": "approve",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "index",
-				"type": "uint256"
-			}
-		],
-		"name": "getTokenInfo",
-		"outputs": [
-			{
 				"internalType": "address",
-				"name": "tokenAddress",
+				"name": "account",
 				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "LTV",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "stableRate",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
 			}
 		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getTokensCount",
+		"name": "balanceOf",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -161,12 +142,12 @@ const XRPLendingBorrowingContractABI = [
 	},
 	{
 		"inputs": [],
-		"name": "larToken",
+		"name": "decimals",
 		"outputs": [
 			{
-				"internalType": "contract IERC20",
+				"internalType": "uint8",
 				"name": "",
-				"type": "address"
+				"type": "uint8"
 			}
 		],
 		"stateMutability": "view",
@@ -176,7 +157,55 @@ const XRPLendingBorrowingContractABI = [
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "tokenAddress",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "subtractedValue",
+				"type": "uint256"
+			}
+		],
+		"name": "decreaseAllowance",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "addedValue",
+				"type": "uint256"
+			}
+		],
+		"name": "increaseAllowance",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
 				"type": "address"
 			},
 			{
@@ -185,25 +214,19 @@ const XRPLendingBorrowingContractABI = [
 				"type": "uint256"
 			}
 		],
-		"name": "lend",
+		"name": "mint",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "lentAmount",
+		"inputs": [],
+		"name": "name",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "string",
 				"name": "",
-				"type": "uint256"
+				"type": "string"
 			}
 		],
 		"stateMutability": "view",
@@ -230,10 +253,36 @@ const XRPLendingBorrowingContractABI = [
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "tokenAddress",
+				"name": "to",
 				"type": "address"
 			},
 			{
@@ -242,20 +291,7 @@ const XRPLendingBorrowingContractABI = [
 				"type": "uint256"
 			}
 		],
-		"name": "repay",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "supportedTokens",
+		"name": "transfer",
 		"outputs": [
 			{
 				"internalType": "bool",
@@ -263,60 +299,36 @@ const XRPLendingBorrowingContractABI = [
 				"type": "bool"
 			}
 		],
-		"stateMutability": "view",
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "",
+				"name": "from",
 				"type": "address"
-			}
-		],
-		"name": "tokenCollateral",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "tokens",
-		"outputs": [
+			},
 			{
 				"internalType": "address",
-				"name": "tokenAddress",
+				"name": "to",
 				"type": "address"
 			},
 			{
 				"internalType": "uint256",
-				"name": "LTV",
+				"name": "amount",
 				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "stableRate",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
 			}
 		],
-		"stateMutability": "view",
+		"name": "transferFrom",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -331,25 +343,7 @@ const XRPLendingBorrowingContractABI = [
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "tokenAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "withdrawCollateral",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
 	}
 ]
- 
-export default XRPLendingBorrowingContractABI;  
+
+export default TOKEN_ABI
