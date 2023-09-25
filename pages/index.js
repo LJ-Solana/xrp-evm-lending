@@ -9,7 +9,7 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import Web3 from 'web3';
 import CONTRACT_ABI from '../smart-contracts/XRPLendingBorrowingABI';
 import TOKEN_ABI from '../smart-contracts/XRPLendTokenABI';
-import FAUCET_ABI from '../smart-contracts/faucetABI';
+import FAUCET_ABI from '../smart-contracts/XRPLendTokenABI';
 
 const tokenContractAddress = "0x143dacb2c2e479b764421c0bbe825c805a320fa5";
 const lendingContractAddress = "0x445C4FbDB81d92f80B4580F434BBb42105B90eeb";
@@ -35,9 +35,9 @@ export default function Home() {
   const [borrowAmount, setBorrowAmount] = useState(0);
 
   //Wallet Stats
-  const [UserLentAmount, setUserLentAmount] = useState(null);
-  const [UserBorrowedAmount, setUserBorrowedAmount] = useState(null);
-  const [UserTokenCollateral, setUserTokenCollateral] = useState(null);  
+  const [UserLentAmount, setUserLentAmount] = useState(0);
+  const [UserBorrowedAmount, setUserBorrowedAmount] = useState(0);
+  const [UserTokenCollateral, setUserTokenCollateral] = useState(0);  
 
   let provider
   let web3;
@@ -81,14 +81,21 @@ export default function Home() {
         if (!provider) {
           throw new Error('Provider not available. Please install MetaMask or another Ethereum wallet.');
         }
-  
         // Request accounts from the wallet
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
-        setUserAddress(accounts[0]); // Assuming the first account is the connected one        
+        setUserAddress(accounts[0]); // Assuming the first account is the connected one      
       } catch (error) {
         console.error('Error connecting wallet:', error.message);
       }
     };
+
+    useEffect(() => {
+      if (userAddress) {
+        fetchBorrowedAmount();
+        fetchLentAmount();
+        fetchCollateralAmount();
+      }
+    }, [userAddress]);
 
     // Call token Faucet to get $LND Token for interacting
     const handleRequestTokens = async () => {
@@ -146,7 +153,7 @@ export default function Home() {
     const fetchBorrowedAmount = async () => {
       try {
         const borrowedAmount = await lendingContractInstance.methods.borrowedAmount(userAddress).call();
-        setUserBorrowedAmount(borrowedAmount);
+        setUserBorrowedAmount(borrowedAmount.toString());
         console.log('Successfully fetched borrowed amount:', borrowedAmount);
       } catch (error) {
         console.error('Error fetching borrowed amount:', error);
@@ -158,7 +165,8 @@ export default function Home() {
     const fetchLentAmount = async () => {
       try {
         const lentAmountValue = await lendingContractInstance.methods.lentAmount(userAddress).call();
-        setUserLentAmount(lentAmountValue);
+        console.log("abjdbjbdidwd: ", UserLentAmount)
+        setUserLentAmount(lentAmountValue.toString());
         console.log('Successfully fetched lent amount:', lentAmountValue);
       } catch (error) {
         console.error('Error fetching user lent amount:', error);
@@ -170,22 +178,13 @@ export default function Home() {
     const fetchCollateralAmount = async () => {
       try {
         const tokenCollateralValue = await lendingContractInstance.methods.tokenCollateral(userAddress).call();
-        setUserTokenCollateral(tokenCollateralValue);
+        setUserTokenCollateral(tokenCollateralValue.toString());
         console.log('Successfully fetched token collateral amount:', tokenCollateralValue);
       } catch (error) {
         console.error('Error fetching user token collateral:', error);
         // Handle the error appropriately
       }
     };
-
-    // Call all on component refresh
-    useEffect(() => {
-      if (userAddress) {
-        fetchBorrowedAmount();
-        fetchLentAmount();
-        fetchCollateralAmount();
-      }
-    }, [userAddress]);
 
     const approveToken = async function() {
         
@@ -525,13 +524,13 @@ export default function Home() {
 
         <div className={styles.topContainer}>
           <div className={styles.collateralBalances}>
-          <button className={styles.faucetButton} onClick={handleRequestTokens}>
-           Get $LND Token
-          </button>
+            <button className={styles.faucetButton} onClick={handleRequestTokens}>
+            Get $LND Token
+            </button>
           </div>
-          <button className={styles.walletConnect} onClick={connect}>
-            {userAddress ? 'Connected' : 'Connect Wallet'}
-          </button>
+            <button className={styles.walletConnect} onClick={connect}>
+              {userAddress ? 'Connected' : 'Connect Wallet'}
+            </button>
         </div>
 
         <div className={styles.accountInfo}>
@@ -547,7 +546,7 @@ export default function Home() {
                 <p>Total value supplied across all assets in the XRPLend protocol.</p>
               </div>
             </div>
-            <p>{UserLentAmount !== null ? UserLentAmount : 'Connect wallet to view'}</p>
+            <p>{UserLentAmount}</p>
           </div>
 
           <div className={styles.cardGlobal}>
