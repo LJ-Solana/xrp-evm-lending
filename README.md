@@ -50,14 +50,14 @@ Follow these steps to set up the XRP-EVM Sidechain Lending Platform on your loca
 
    ```bash
    git clone https://github.com/yourusername/xrp-evm-lending.git
-   cd xrp-evm-lending ```
+   cd xrp-evm-lending 
 
 2. Install all packages:
 
      ```bash
-   npm i ```
+   npm i 
 
 2. Run in dev Mode:
 
      ```bash
-   npm run dev ```
+   npm run dev 
