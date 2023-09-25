@@ -205,11 +205,11 @@ export default function Home() {
         throw new Error('Provider not available. Please install MetaMask or another Ethereum wallet.');
       }
 
-      // Convert the lendAmount to Wei
+      // Convert the DepositAmount 
       const amountInWei = web3.utils.toWei(borrowAmount.toString(), 'ether');
       console.log('deposit Amount:', borrowAmount);
 
-      const tx = lendingContractInstance.methods.depositCollateral(tokenContractAddress, amountInWei);
+      const tx = lendingContractInstance.methods.depositCollateral(tokenContractAddress, borrowAmount.toString());
           var gas = await tx.estimateGas({from: userAddress});
           const data = tx.encodeABI();
           console.log("gassss: ", gas)
@@ -242,7 +242,7 @@ export default function Home() {
       const amountInWei = web3.utils.toWei(borrowAmount.toString(), 'ether');
       console.log('Deposit Amount:', borrowAmount);
 
-      const tx = lendingContractInstance.methods.borrow(tokenContractAddress, "10");
+      const tx = lendingContractInstance.methods.borrow(tokenContractAddress, borrowAmount.toString());
           var gas = await tx.estimateGas({from: userAddress});
           const data = tx.encodeABI();
           console.log("gassss: ", gas)
