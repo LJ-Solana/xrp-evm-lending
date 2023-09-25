@@ -46,11 +46,10 @@ export default function Home() {
   let web3;
 
     useEffect(() => {
-      // Check the screen width and redirect if it's below a certain threshold
-      if (window.innerWidth <= 768) { // Adjust the threshold as needed
-        router.push('/small-screen');
+      if (window.innerWidth <= 768) {
+        router.push('/SmallScreenPage');
       }
-    }, []);
+    }, []); 
 
      // Initialise Contracts
     useEffect(() => {
@@ -67,7 +66,6 @@ export default function Home() {
           console.error("Error initializing contracts:", error);
         }
       }
-
       initializeContracts();
     }, []);
       
