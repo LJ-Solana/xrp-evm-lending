@@ -19,10 +19,12 @@ Welcome to the XRP-EVM Sidechain Lending Platform, a decentralized lending platf
 ## Features
 
 - **Lending and Borrowing:** Users can lend their crypto assets to earn interest or borrow assets by providing collateral.
-- **APY/APR Information:** Real-time information about Annual Percentage Yield (APY) and Annual Percentage Rate (APR) is available.
+- **Collateral Management:** Users manage how much they can borrow based on the LTV of their collateral.
+- **Additional Tokens:** Owner of the contract can add newly supported tokens with 'address tokenAddress;, uint256 LTV;, uint256 stableRate;, string name;'
+- **APY/APR Information:** Information about asset Annual Percentage Yield (APY) and Annual Percentage Rate (APR) is available.
 - **User Wallet Integration:** Supports integration with MetaMask or other compatible wallets for secure transactions.
+- **All Token Info:** Users can fetch information on all supported tokens by the protocol.
 - **Asset Management:** Users can view their asset balances, lending positions, and borrowing positions.
-- **Responsive Design:** A user-friendly and responsive web interface for both desktop and mobile users.
 
 ## Getting Started
 
@@ -40,4 +42,8 @@ Follow these steps to set up the XRP-EVM Sidechain Lending Platform on your loca
 
    ```bash
    git clone https://github.com/yourusername/xrp-evm-lending.git
-   cd xrp-evm-lending
+   cd xrp-evm-lending ```
+
+     ```bash
+   git clone https://github.com/yourusername/xrp-evm-lending.git
+   cd xrp-evm-lending ```
