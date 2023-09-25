@@ -37,7 +37,7 @@ https://xrp-evm-lending-platform.vercel.app/
 
 ## Getting Started
 
-Follow these steps to set up the XRP-EVM Sidechain Lending Platform on your local environment.
+Follow these steps to set up the XRP-EVM Sidechain Lending Platform on your local environment. Please make sure to click the green 'Get $LND Token' Button to obtain a certain amount of token needed for interaction with this protocol.
 
 ### Prerequisites
 
