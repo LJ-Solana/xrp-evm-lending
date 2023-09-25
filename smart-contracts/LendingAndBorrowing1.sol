@@ -1,5 +1,5 @@
 // Deployed these and tested via Remix as first time deploying ETH contract. 
-// Deployed Address: 0x445C4FbDB81d92f80B4580F434BBb42105B90eeb
+// Deployed Address: 0x445C4FbDB81d92f80B4580F434BBb42105B90eeb https://evm-sidechain.xrpl.org/address/0x445C4FbDB81d92f80B4580F434BBb42105B90eeb
 // Would explore hardhat/truffle in future.
 
 // // SPDX-License-Identifier: MIT

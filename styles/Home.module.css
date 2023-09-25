@@ -20,8 +20,9 @@
 .collateralBalances {
   flex: 1; 
   position: absolute;
-  top: 8px;
-  right: 150px; 
+  top: 0px;
+  right: 120px; 
+  width: 300px;
 }
 
 .depositCollateral {

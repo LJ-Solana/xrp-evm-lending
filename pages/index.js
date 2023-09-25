@@ -9,8 +9,11 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import Web3 from 'web3';
 import CONTRACT_ABI from '../smart-contracts/XRPLendingBorrowingABI';
 import TOKEN_ABI from '../smart-contracts/XRPLendTokenABI';
+import FAUCET_ABI from '../smart-contracts/faucetABI';
+
 const tokenContractAddress = "0x143dacb2c2e479b764421c0bbe825c805a320fa5";
 const lendingContractAddress = "0x445C4FbDB81d92f80B4580F434BBb42105B90eeb";
+const faucetContractAddress = "0x0C82aFA4906D395d7Da2e5692B0A4E9DE64D63bE";
 
 export default function Home() {
 
@@ -18,6 +21,7 @@ export default function Home() {
   const [XRPLendingContract,  setXRPLendingContract] = useState(null);
   const [tokenContractInstance, setTokenContractInstance] = useState(null);
   const [lendingContractInstance, setLendingContractInstance] = useState(null);
+  const [faucetContractInstance, setFaucetContractInstance] = useState(null);
   const [userAddress, setUserAddress] = useState('');
 
   // Get Token Prices 
@@ -33,33 +37,32 @@ export default function Home() {
   const [lendAmount, setLendAmount] = useState(0);
   const [borrowAmount, setBorrowAmount] = useState(0);
 
-  // Borrowing
-  const [collateralBalance, setCollateralBalance] = useState(0);
-  const [availableBorrowAmount, setAvailableBorrowAmount] = useState(0);
-
   let provider
   let web3;
 
     useEffect(() => {
         getProvider();
     });
+    
     useEffect(() => {
       async function initializeContracts() {
         try {
           const web3 = new Web3(window.ethereum); // Assuming MetaMask is available
           const tokenContract = new web3.eth.Contract(TOKEN_ABI, tokenContractAddress);
           const lendingContract = new web3.eth.Contract(CONTRACT_ABI, lendingContractAddress);
+          const faucetContract = new web3.eth.Contract(FAUCET_ABI, faucetContractAddress);
           setTokenContractInstance(tokenContract);
           setLendingContractInstance(lendingContract);
+          setFaucetContractInstance(faucetContract); 
         } catch (error) {
           // Handle errors here
           console.error("Error initializing contracts:", error);
         }
       }
-  
+
       initializeContracts();
     }, []);
-  
+      
     const getProvider = async() =>{
       provider =  await detectEthereumProvider();
       web3 = new Web3(provider);
@@ -277,32 +280,43 @@ export default function Home() {
     setBorrowAmount(newValue);
     console.log('Borrow Amount:', newValue);
   };  
-  
-  useEffect(() => {
-    if (XRPLendingContract && tokenAddress) {
-      async function fetchAvailableBorrowAmount() {
-        try {
-          console.log('Fetching available borrow amount...');
-          const available = await XRPLendingContract.methods.lentAmount(tokenAddress).call();
-          console.log('Available borrow amount fetched successfully:', available);
-          setAvailableBorrowAmount(available);
-        } catch (error) {
-          console.error('Error fetching available borrow amount:', error);
-        }
+
+  const handleRequestTokens = async () => {
+    try {
+      if (!provider) {
+        throw new Error('Provider not available. Please install MetaMask or another Ethereum wallet.');
       }
-      console.log('Starting to fetch available borrow amount for token:', tokenAddress);
-      fetchAvailableBorrowAmount();
+  
+      const amountInWei = web3.utils.toWei('1000', 'ether');
+      console.log('Request Amount:', 10000);
+  
+      const tx = faucetContractInstance.methods.requestTokens(amountInWei);
+      const gas = await tx.estimateGas({ from: userAddress });
+      const data = tx.encodeABI();
+      console.log("Gas Estimate:", gas);
+  
+      const transactionHash = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            gas: web3.utils.toHex(gas),
+            to: faucetContractAddress,
+            from: userAddress,
+            value: '0x0',
+            data: data,
+          },
+        ],
+      });
+  
+      console.log('Transaction sent successfully:', transactionHash);
+      toast.success('Request Tokens successful');
+    } catch (error) {
+      console.error('Error Request Tokens:', error); // Log the entire error object for more details
+      toast.error('Request Tokens failed');
     }
-  }, [XRPLendingContract, tokenAddress]);
-
-  const openLendModal = () => {
-    setShowLendModal(true);
   };
-
-  const closeLendModal = () => {
-    setShowLendModal(false);
-  };
-
+  
+  
   const toggleTable = () => {
     setShowLendTable(!showLendTable);
   };
@@ -355,7 +369,9 @@ export default function Home() {
 
         <div className={styles.topContainer}>
           <div className={styles.collateralBalances}>
-            <p>Collateral Balance: {collateralBalance}</p>
+          <button className={styles.walletConnect} onClick={handleRequestTokens}>
+           Get $LND
+          </button>
           </div>
           <button className={styles.walletConnect} onClick={connect}>
             {userAddress ? 'Connected' : 'Connect Wallet'}
