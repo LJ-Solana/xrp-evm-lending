@@ -50,7 +50,7 @@ Follow these steps to set up the XRP-EVM Sidechain Lending Platform on your loca
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/xrp-evm-lending.git
+   git clone https://github.com/LJ-Solana/xrp-evm-lending.git
    cd xrp-evm-lending 
 
 2. Install all packages:
