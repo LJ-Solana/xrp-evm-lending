@@ -553,7 +553,7 @@ export default function Home() {
                 <p>Total value supplied across all assets in the XRPLend protocol.</p>
               </div>
             </div>
-            <p>{UserLentAmount !== null ? UserLentAmount : 'Connect wallet to view'}  $LND</p>
+            <p>{UserLentAmount !== null ? UserLentAmount : 'Connect wallet to view'} <span className={styles.blueText}>$LND</span></p>
           </div>
 
           <div className={styles.cardGlobal}>
@@ -564,7 +564,7 @@ export default function Home() {
                 <p>Total value supplied across all assets in the XRPLend protocol.</p>
               </div>
             </div>
-            <p>{UserBorrowedAmount !== null ? UserBorrowedAmount : 'Connect wallet to view'} $LND</p>
+            <p>{UserBorrowedAmount !== null ? UserBorrowedAmount : 'Connect wallet to view'}<span className={styles.blueText}>$LND</span></p>
           </div>
         
           <div className={styles.cardGlobal}>
@@ -575,7 +575,7 @@ export default function Home() {
                 <p>You can borrow up to 70% of the amount you provide as collateral.</p>
               </div>
             </div>
-            <p>{UserTokenCollateral !== null ? UserTokenCollateral : 'Connect wallet to view'} $LND</p>
+            <p>{UserTokenCollateral !== null ? UserTokenCollateral : 'Connect wallet to view'} <span className={styles.blueText}>$LND</span></p>
           </div>
         </div>
 
