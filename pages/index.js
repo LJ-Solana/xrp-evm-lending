@@ -10,7 +10,7 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import Web3 from 'web3';
 import CONTRACT_ABI from '../smart-contracts/XRPLendingBorrowingABI';
 import TOKEN_ABI from '../smart-contracts/XRPLendTokenABI';
-import FAUCET_ABI from '../smart-contracts/XRPLendTokenABI';
+import FAUCET_ABI from '../smart-contracts/faucetABI';
 
 const tokenContractAddress = "0x143dacb2c2e479b764421c0bbe825c805a320fa5";
 const lendingContractAddress = "0x445C4FbDB81d92f80B4580F434BBb42105B90eeb";
