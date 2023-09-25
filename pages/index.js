@@ -81,7 +81,6 @@ export default function Home() {
         if (!provider) {
           throw new Error('Provider not available. Please install MetaMask or another Ethereum wallet.');
         }
-        // Request accounts from the wallet
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
         setUserAddress(accounts[0]); // Assuming the first account is the connected one      
       } catch (error) {
@@ -500,7 +499,7 @@ export default function Home() {
         </div>
 
         <div className={styles.gettingStartedButtonContainer}>
-          <button className={styles.gettingStartedButton} onClick={openModal}> Click Here Before Interaction w/ Protocol</button>
+          <button className={styles.gettingStartedButton} onClick={openModal}> Click Here For Information Before Interaction w/ Protocol</button>
         </div>
 
         <div className={styles.toggleContainer}>
