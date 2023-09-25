@@ -206,6 +206,55 @@
   background-color: #0056b3; 
 }
 
+.buttonHorizontal {
+  display: inline-block;
+  margin-right: 10px;
+  justify-content: center;
+}
+
+.buttonHorizontal {
+  display: inline-block;
+  margin-inline: 10px;
+}
+
+.borrowButton {
+  background-color: red; 
+  color: white; 
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  margin: 5px;
+}
+
+
+.repayButton {
+  background-color: green; 
+  color: white; 
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+
+.faucetButton {
+  padding: 10px 20px; 
+  position: absolute;
+  top: 5px;
+  right: 10px; 
+  border-radius: 5px;
+  background-color: green; 
+  color: white; 
+  border: none; 
+  cursor: pointer; 
+  margin-top: 10px;
+}
+
+.faucetButton:hover {
+  background-color: green; 
+}
+
 
 .modals {
   display: flex;
