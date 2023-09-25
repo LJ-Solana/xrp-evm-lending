@@ -1,6 +1,7 @@
-import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
 import axios from 'axios';
 import { InformationCircleIcon } from '@heroicons/react/24/solid'
 import { ToastContainer, toast } from 'react-toastify';
@@ -16,6 +17,8 @@ const lendingContractAddress = "0x445C4FbDB81d92f80B4580F434BBb42105B90eeb";
 const faucetContractAddress = "0x945A4Ad6F6D434F3Bc7922F7d398dDB8087dADA8";
 
 export default function Home() {
+
+  const router = useRouter();
 
   // Connections
   const [tokenContractInstance, setTokenContractInstance] = useState(null);
@@ -41,6 +44,13 @@ export default function Home() {
 
   let provider
   let web3;
+
+    useEffect(() => {
+      // Check the screen width and redirect if it's below a certain threshold
+      if (window.innerWidth <= 768) { // Adjust the threshold as needed
+        router.push('/small-screen');
+      }
+    }, []);
 
      // Initialise Contracts
     useEffect(() => {
