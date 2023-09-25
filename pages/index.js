@@ -23,26 +23,26 @@ export default function Home() {
   const [faucetContractInstance, setFaucetContractInstance] = useState(null);
   const [userAddress, setUserAddress] = useState('');
 
-  // Get Token Prices 
+  // Tokens & Formatting
   const [balance, setBalance] = useState(0); 
-  const [showLendTable, setShowLendTable] = useState(true);
+  const [LNDTokenBalance, setLNDTokenBalance] = useState(null);
   const [xrpPrice, setXrpPrice] = useState(null);
+  const [showLendTable, setShowLendTable] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Token
-  const [tokenAddress, setTokenAddress] = useState(''); 
-  const [inputValue, setInputValue] = useState(""); 
-
-  //Lending
+  //Lending & Borrowing
   const [lendAmount, setLendAmount] = useState(0);
   const [borrowAmount, setBorrowAmount] = useState(0);
+
+  //Wallet Stats
+  const [UserLentAmount, setUserLentAmount] = useState(null);
+  const [UserBorrowedAmount, setUserBorrowedAmount] = useState(null);
+  const [UserTokenCollateral, setUserTokenCollateral] = useState(null);  
 
   let provider
   let web3;
 
-    useEffect(() => {
-        getProvider();
-    });
-    
+     // Initialise Contracts
     useEffect(() => {
       async function initializeContracts() {
         try {
@@ -54,7 +54,6 @@ export default function Home() {
           setLendingContractInstance(lendingContract);
           setFaucetContractInstance(faucetContract); 
         } catch (error) {
-          // Handle errors here
           console.error("Error initializing contracts:", error);
         }
       }
@@ -62,6 +61,7 @@ export default function Home() {
       initializeContracts();
     }, []);
       
+    // Connect Metamask & Web3
     const getProvider = async() =>{
       provider =  await detectEthereumProvider();
       web3 = new Web3(provider);
@@ -72,6 +72,10 @@ export default function Home() {
       }
     }
 
+      useEffect(() => {
+        getProvider();
+    });
+  
     const connect = async () => {
       try {
         if (!provider) {
@@ -85,7 +89,104 @@ export default function Home() {
         console.error('Error connecting wallet:', error.message);
       }
     };
-  
+
+    // Call token Faucet to get $LND Token for interacting
+    const handleRequestTokens = async () => {
+      try {
+        if (!provider) {
+          throw new Error('Provider not available. Please install MetaMask or another Ethereum wallet.');
+        }
+        console.log('Request Amount:', 1000);
+    
+        // Include the 'amountInWei' parameter in the transaction data
+        const tx = faucetContractInstance.methods.requestTokens("100000");
+        const gas = await tx.estimateGas({ from: userAddress });
+        const data = tx.encodeABI();
+        console.log("Gas Estimate:", gas);
+    
+        const transactionHash = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [
+            {
+              gas: web3.utils.toHex(gas),
+              to: faucetContractAddress,
+              from: userAddress,
+              value: '0x0',
+              data: data,
+            },
+          ],
+        });
+    
+        console.log('Transaction sent successfully:', transactionHash);
+        toast.success('Sent you 100,000 $LND tokens');
+      } catch (error) {
+        console.error('Error Request Tokens:', error);
+        toast.error('Request Tokens failed');
+      }
+    };
+
+    // Fetch LNDToken Balance for Wallet
+    const getLNDTokenBalance = async () => {
+      try {
+        const balance = await tokenContractInstance.methods.balanceOf(userAddress).call();
+        setLNDTokenBalance(balance); 
+        console.log(`Token Balance for ${userAddress}: ${LNDTokenBalance}`);
+      } catch (error) {
+        console.error('Error fetching token balance:', error);
+      }
+    };
+
+    useEffect(() => {
+      if (userAddress) {
+        getLNDTokenBalance();
+      }
+    }, [userAddress]);
+
+    // Fetch Borrow Amount for Wallet
+    const fetchBorrowedAmount = async () => {
+      try {
+        const borrowedAmount = await lendingContractInstance.methods.borrowedAmount(userAddress).call();
+        setUserBorrowedAmount(borrowedAmount);
+        console.log('Successfully fetched borrowed amount:', borrowedAmount);
+      } catch (error) {
+        console.error('Error fetching borrowed amount:', error);
+        // Handle the error appropriately
+      }
+    };
+
+    // Fetch Lent Amount for Wallet
+    const fetchLentAmount = async () => {
+      try {
+        const lentAmountValue = await lendingContractInstance.methods.lentAmount(userAddress).call();
+        setUserLentAmount(lentAmountValue);
+        console.log('Successfully fetched lent amount:', lentAmountValue);
+      } catch (error) {
+        console.error('Error fetching user lent amount:', error);
+        // Handle the error appropriately
+      }
+    };
+
+    // Fetch Collateral Amount for Wallet
+    const fetchCollateralAmount = async () => {
+      try {
+        const tokenCollateralValue = await lendingContractInstance.methods.tokenCollateral(userAddress).call();
+        setUserTokenCollateral(tokenCollateralValue);
+        console.log('Successfully fetched token collateral amount:', tokenCollateralValue);
+      } catch (error) {
+        console.error('Error fetching user token collateral:', error);
+        // Handle the error appropriately
+      }
+    };
+
+    // Call all on component refresh
+    useEffect(() => {
+      if (userAddress) {
+        fetchBorrowedAmount();
+        fetchLentAmount();
+        fetchCollateralAmount();
+      }
+    }, [userAddress]);
+
     const approveToken = async function() {
         
         if (!web3) {
@@ -121,6 +222,7 @@ export default function Home() {
         }
     }
 
+    // Fetch balances with explorer API
     useEffect(() => {
       const apiUrl = 'https://evm-poa-sidechain.peersyst.tech/api?module=account&action=balance';
       const fullUrl = `${apiUrl}&address=${userAddress}`;
@@ -141,6 +243,7 @@ export default function Home() {
         });
     }, []); 
 
+    // Fetch token prices with CoinGecko API
     useEffect(() => {
       async function fetchPrices() {
         try {
@@ -163,6 +266,7 @@ export default function Home() {
       fetchPrices();
     }, []);
 
+     // Core Lending Function
     const handleLend = async () => {
       try {
         if (!provider) {
@@ -190,15 +294,16 @@ export default function Home() {
             },
           ],
         });
-    
-        toast.success('Transaction sent successfully: ' + transactionHash); // Concatenate transactionHash
-        toast.success('Lending successful');
+        await getLNDTokenBalance();
+        console.log('Transaction sent successfully: ' + transactionHash); // Concatenate transactionHash
+        toast.success('Lend of ' + lendAmount + ' $LND successful');
       } catch (error) {
         console.error('Error lending:', error.message);
         toast.error('Lending failed');
       }
     };  
 
+    // Core Deposit Collateral Function
     const handleDepositCollateral = async () => {
       try {
         if (!provider) {
@@ -225,20 +330,21 @@ export default function Home() {
                 },
               ],
             });          
+        await getLNDTokenBalance();
         console.log('Transaction sent successfully:', transactionHash);
-        toast.success('Deposit Collateral successful');
+        toast.success('Deposit of ' + borrowAmount + ' $LND collateral successful');
       } catch (error) {
         console.error('Error deposit:', error.message);
         toast.error('Deposit Collateral failed');
       }
     }; 
 
+    // Core Withdraw Collateral Function
     const handleWithdrawCollateral = async () => {
       try {
         if (!provider) {
           throw new Error('Provider not available. Please install MetaMask or another Ethereum wallet.');
         }
-    
         // Convert the Withdrawal Amount
         const amountInWei = web3.utils.toWei(borrowAmount.toString(), 'ether');
         console.log('Withdraw Amount:', borrowAmount);
@@ -261,15 +367,16 @@ export default function Home() {
             },
           ],
         });
-    
+        await getLNDTokenBalance();
         console.log('Transaction sent successfully:', transactionHash);
-        toast.success('Withdraw Collateral successful');
+        toast.success('Withdraw of ' + borrowAmount  + ' $LND collateral successful');
       } catch (error) {
         console.error('Error withdrawing collateral:', error.message);
         toast.error('Withdraw Collateral failed');
       }
     };
-    
+
+     // Core Borrow Function
     const handleBorrow = async () => {
       try {
         if (!provider) {
@@ -295,14 +402,16 @@ export default function Home() {
                 },
               ],
             });          
+        await getLNDTokenBalance();
         console.log('Transaction sent successfully:', transactionHash);
-        toast.success('Borrow successful');
+        toast.success('Borrow of ' + borrowAmount + ' $LND successful');
       } catch (error) {
         console.error('Error Borrow:', error.message);
         toast.error('Borrow failed');
       }
     }; 
-      
+
+    // Core Repay Function
     const handleRepay = async () => {
       try {
         if (!provider) {
@@ -310,8 +419,8 @@ export default function Home() {
         }
     
         // Convert the Repayment Amount
-        const amountInWei = web3.utils.toWei(repayAmount.toString(), 'ether');
-        console.log('Repayment Amount:', repayAmount);
+        const amountInWei = web3.utils.toWei(borrowAmount.toString(), 'ether');
+        console.log('Repayment Amount:', borrowAmount);
     
         // Construct the transaction to call the repay function
         const tx = lendingContractInstance.methods.repay(tokenContractAddress, borrowAmount.toString());
@@ -332,65 +441,40 @@ export default function Home() {
             },
           ],
         });
-    
+        await getLNDTokenBalance();
         console.log('Transaction sent successfully:', transactionHash);
-        toast.success('Repayment successful');
+        toast.success('Repayment of ' + borrowAmount + ' $LND successful');
       } catch (error) {
         console.error('Error repaying debt:', error.message);
         toast.error('Repayment failed');
       }
     }; 
 
+    // Change Input Amount (lend)
     const handleInputChange = (e) => {
       const newValue = e.target.value;
       setLendAmount(newValue);
       console.log('Lend Amount:', newValue);
     };  
 
+    // Change Input Amount (Borrow & Collateral)
     const handleBorrowAmount = (e) => {
       const newValue = e.target.value;
       setBorrowAmount(newValue);
       console.log('Borrow Amount:', newValue);
     };    
 
-    const handleRequestTokens = async () => {
-      try {
-        if (!provider) {
-          throw new Error('Provider not available. Please install MetaMask or another Ethereum wallet.');
-        }
-    
-        const amountInWei = web3.utils.toWei('1000', 'ether');
-        console.log('Request Amount:', 1000);
-    
-        // Include the 'amountInWei' parameter in the transaction data
-        const tx = faucetContractInstance.methods.requestTokens(amountInWei);
-        const gas = await tx.estimateGas({ from: userAddress });
-        const data = tx.encodeABI();
-        console.log("Gas Estimate:", gas);
-    
-        const transactionHash = await provider.request({
-          method: 'eth_sendTransaction',
-          params: [
-            {
-              gas: web3.utils.toHex(gas),
-              to: faucetContractAddress,
-              from: userAddress,
-              value: '0x0',
-              data: data,
-            },
-          ],
-        });
-    
-        console.log('Transaction sent successfully:', transactionHash);
-        toast.success('Request Tokens successful');
-      } catch (error) {
-        console.error('Error Request Tokens:', error);
-        toast.error('Request Tokens failed');
-      }
-    };
-    
+    // Change Lend/Borrow Table
     const toggleTable = () => {
       setShowLendTable(!showLendTable);
+    };
+
+     // Intro Info Modal
+    const openModal = () => {
+      setIsModalOpen(true);
+    };
+    const closeModal = () => {
+      setIsModalOpen(false);
     };
     
   return (
@@ -415,11 +499,11 @@ export default function Home() {
           </h1>
               )}
         </div>
-        
-        {/* <div  className={styles.gifContainer}>
-        <iframe src="https://giphy.com/embed/KzcamVeEJlaxCE4OAt" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
-        </div> */}
-      
+
+        <div className={styles.gettingStartedButtonContainer}>
+          <button className={styles.gettingStartedButton} onClick={openModal}> Click Here Before Interaction w/ Protocol</button>
+        </div>
+
         <div className={styles.toggleContainer}>
           <button
             className={`${styles.toggleButton} ${showLendTable ? styles.active : ''}`}
@@ -463,7 +547,7 @@ export default function Home() {
                 <p>Total value supplied across all assets in the XRPLend protocol.</p>
               </div>
             </div>
-            <p>{lendAmount}</p>
+            <p>{UserLentAmount !== null ? UserLentAmount : 'Connect wallet to view'}</p>
           </div>
 
           <div className={styles.cardGlobal}>
@@ -474,7 +558,18 @@ export default function Home() {
                 <p>Total value supplied across all assets in the XRPLend protocol.</p>
               </div>
             </div>
-            <p>$2000</p>
+            <p>{UserBorrowedAmount !== null ? UserBorrowedAmount : 'Connect wallet to view'}</p>
+          </div>
+        
+          <div className={styles.cardGlobal}>
+          <div className={styles.tooltip}>
+            <p><InformationCircleIcon height={20} className={styles.infoIcon} />Collateral</p> 
+              <div className={styles.tooltipText}>
+                <p>Collateral</p>
+                <p>You can borrow up to 70% of the amount you provide as collateral.</p>
+              </div>
+            </div>
+            <p>{UserTokenCollateral !== null ? UserTokenCollateral : 'Connect wallet to view'}</p>
           </div>
         </div>
 
@@ -506,20 +601,10 @@ export default function Home() {
                     </div>
                     APY
                   </th>
-                  <th>
-                    <div className={styles.tooltip}>
-                      <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
-                      <div className={styles.tooltipText}>
-                        <p>Deposits</p>
-                        <p>Total XRPLend deposits for each asset.</p>
-                      </div>
-                    </div>
-                    Deposits
-                  </th>
                   <th>Wallet Amt.</th>
-                  <th>Amount to Supply</th>
-                  <th>Approve Amount</th>
-                  <th>Lend Amount</th>
+                  <th>Approve/Lend Amount</th>
+                  <th>Approve Action</th>
+                  <th>Lend Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -527,8 +612,7 @@ export default function Home() {
                   <td>LND</td>
                   <td>${parseFloat(xrpPrice).toFixed(2)}</td>
                   <td className={styles.greenText}>5%</td>
-                  <td>1000</td>
-                  <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
+                  <td>{LNDTokenBalance ? parseFloat(LNDTokenBalance).toFixed(2) : 'Connect Wallet'}</td>
                   <td>
                     <input
                       className={styles.input}
@@ -583,18 +667,8 @@ export default function Home() {
                     </div>
                     APR
                   </th>
-                  <th>
-                    <div className={styles.tooltip}>
-                      <InformationCircleIcon height={'20px'} className={styles.infoIcon} />
-                      <div className={styles.tooltipText}>
-                        <p>Available</p>
-                        <p>The amount of tokens available to borrow for each asset. Calculated as the minimum of the asset's borrow limit and available liquidity that has not yet been borrowed.</p>
-                      </div>
-                    </div>
-                    Available
-                  </th>
                   <th>Wallet Amt.</th>
-                  <th>Amount to Borrow</th>
+                  <th>Collateral/Borrow Amount</th>
                   <th>Deposit/Withdraw Collateral</th>
                   <th>Borrow/Repay Loan</th>
                 </tr>
@@ -604,8 +678,7 @@ export default function Home() {
                   <td>LND</td>
                   <td>${parseFloat(xrpPrice).toFixed(2)}</td>
                   <td className={styles.redText}>5%</td>
-                  <td>1000</td>
-                  <td>{balance ? parseFloat(balance).toFixed(2) : 'Loading'}</td>
+                  <td>{LNDTokenBalance ? parseFloat(LNDTokenBalance).toFixed(2) : 'Connect Wallet'}</td>
                   <td>
                   <input
                       className={styles.input}
@@ -616,8 +689,8 @@ export default function Home() {
                   </td>
                   <td>
                     <div className={styles.buttonHorizontal}>
-                      <button className={styles.repayButton} onClick={handleDepositCollateral}>Deposit Collateral</button>
                       <button className={styles.borrowButton} onClick={handleWithdrawCollateral}>Withdraw Collateral</button>
+                      <button className={styles.repayButton} onClick={handleDepositCollateral}>Deposit Collateral</button>
                     </div>
                   </td>
                   <td>
@@ -630,8 +703,34 @@ export default function Home() {
               </tbody>
             </table>
           </div>
+          
         )}
 
+        {isModalOpen && (
+        <div className={styles.modals}>
+          <div className={styles.modalContent}>
+          <button onClick={closeModal}>
+              <svg
+                className={styles.close}
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fill="currentColor"
+                  d="M18 6.41L16.59 5 12 9.59 7.41 5 6 6.41 10.59 11 6 15.59 7.41 17 12 12.41 16.59 17 18 15.59 13.41 11 18 6.41z"
+                />
+              </svg>
+            </button>
+            <div className={styles.modalText}>
+              <p>Please hit the 'Get $LND token' button in top right of screen to get $LND from the faucet before interacting with the contract. </p>
+              <p>I created a custom ERC20 token to be the main token for this contract. $LND token is set to 70% LTV. You must deposit at least 70% collateral. The contract owner can add more tokens with custom APY and LTV.</p>
+              <p>In order to lend any amount of token, you must first hit the 'approve' button to enable the transfer of funds.</p>
+            </div>
+          </div>
+        </div>
+        )}
       </main>
 
       <footer className={styles.footer}>
@@ -649,6 +748,7 @@ export default function Home() {
             <p>Loading...</p>
           )}
         </div>
+
       </footer>
 
       <style jsx global>{`

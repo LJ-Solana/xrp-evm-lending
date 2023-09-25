@@ -21,7 +21,7 @@
   flex: 1; 
   position: absolute;
   top: 0px;
-  right: 120px; 
+  right: 140px; 
   width: 300px;
 }
 
@@ -34,7 +34,7 @@
   color: white; 
   border: none; 
   cursor: pointer; 
-  margin-top: 10px;
+  margin-top: 5px;
   border-radius: 5px;
 }
 
@@ -137,7 +137,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.modal-content {
+.modalContent {
   background-color: #121212;
   padding: 20px;
   border-radius: 10px;
@@ -214,7 +214,6 @@
 
 .buttonHorizontal {
   display: inline-block;
-  margin-inline: 10px;
 }
 
 .borrowButton {
@@ -224,9 +223,9 @@
   border: none;
   cursor: pointer;
   border-radius: 5px;
-  margin: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
 }
-
 
 .repayButton {
   background-color: green; 
@@ -339,6 +338,27 @@
 .whiteText {
   color: white;
 }
+.gettingStartedButtonContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.gettingStartedButton {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.gettingStartedButton:hover {
+  background-color: #0056b3;
+}
 
 .button {
   background-color: #007bff; 
@@ -403,17 +423,19 @@
   z-index: 1;
 }
 
-.gifContainer {
+.introContainer {
   display: flex;
   margin: 0 auto;
+  flex-direction: column; 
   bottom: 20px;
-  padding-bottom: 30px;
+  margin-bottom: 20px;
   justify-content: center;
   text-align: center;
   overflow: hidden;
   width: max-content;
   position: sticky;
   z-index: 1;
+  font-style: 'DMSans';
 }
 
 .toggleButton {
@@ -442,7 +464,7 @@
   flex-basis: 45%;
   padding-left: 1.5rem;
   text-align: left;
-  color: inherit;
+  color: white;
   text-decoration: none;
   border: 1px solid #eaeaea;
   border-radius: 10px;
