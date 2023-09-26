@@ -2,11 +2,11 @@
 
 Welcome to the XRP-EVM Sidechain Lending Platform, a decentralized lending platform built on the XRP-EVM sidechain. This platform allows users to lend and borrow various crypto assets while earning interest or paying interest on their loans.
 
-[Example Deployment]
+# Example Deployment
 
 https://xrp-evm-lending-platform.vercel.app/
 
-[Project Screenshot]
+# Project Screenshot
 <img width="1728" alt="homescreen" src="https://github.com/LJ-Solana/xrp-evm-lending/assets/111569336/923359f2-d3a8-4ff5-ad41-61acedc34739">
 
 ## Table of Contents
